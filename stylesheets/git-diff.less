@@ -68,3 +68,30 @@
     }
   }
 }
+
+.inline-message {
+  z-index: 1;
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  margin-top: 5px;
+  background-color: yellow;
+  border: 1px solid #888888;
+  color: white;
+  top: 10;
+  left: 10;
+}
+
+.diff-details {
+  background-color: white;
+  width: 100%;
+}
+
+// Allow messaging to be present when 'zen' package is invoked
+.zen .editor,.editor-contents,.scroll-view {
+  overflow: visible;
+}
+
+.zen .editor.react .scroll-view {
+  overflow: visible;
+}

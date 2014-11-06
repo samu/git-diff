@@ -1,4 +1,5 @@
 {Subscriber} = require 'emissary'
+DiffDetails = require './diff-details'
 
 module.exports =
 class GitDiffView
@@ -95,12 +96,21 @@ class GitDiffView
     @immediateId = setImmediate(@updateDiffs)
 
   updateDiffs: =>
+    @diffDetails.remove() if @diffDetails
+    @diffDetails = new DiffDetails(@editorView)
+
     return if @editor.isDestroyed()
 
     @removeDecorations()
     if path = @buffer?.getPath()
       if @diffs = atom.project.getRepo()?.getLineDiffs(path, @buffer.getText())
         @addDecorations(@diffs)
+
+    # details = atom.project.getRepo()?.getLineDiffDetails(path, @buffer.getText())
+    # if details
+    #   for detail in details
+    #     console.log detail
+
 
   addDecorations: (diffs) ->
     for {oldStart, newStart, oldLines, newLines} in diffs
