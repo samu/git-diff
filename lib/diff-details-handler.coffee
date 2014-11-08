@@ -63,8 +63,8 @@ module.exports = class DiffDetailsHandler
   notifyContentsModified: (diffs) ->
     console.log diff for diff in diffs
     @diffs = diffs
-    @showDiffDetails = false
-    @diffDetails.remove() if @diffDetails?
-    @diffDetails = null
+    # @diffDetails.remove() if @diffDetails?
+    # @diffDetails = null
 
     @updateSelectedHunk(diffs)
+    @updateDiffDetailsDisplay()
