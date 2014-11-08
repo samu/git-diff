@@ -1,6 +1,6 @@
 {View} = require 'atom'
 
-class DiffDetails extends View
+class DiffDetailsView extends View
   @content: ->
     @div class: "diff-details", =>
       @div =>
@@ -15,13 +15,10 @@ class DiffDetails extends View
 
   attach: ->
     @editorView.appendToLinesView(this)
-    @setPosition()
 
-  setPosition: ->
-    pos = @editor.getCursorScreenPosition()
-    pos.row += 1
-    {left, top} = @editorView.pixelPositionForScreenPosition(pos)
+  setPosition: (top)->
+    {left, top} = @editorView.pixelPositionForScreenPosition(row: top, col: 0)
 
     @css(top: top)
 
-module.exports = DiffDetails
+module.exports = DiffDetailsView

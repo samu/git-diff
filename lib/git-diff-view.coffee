@@ -1,5 +1,5 @@
 {Subscriber} = require 'emissary'
-DiffDetails = require './diff-details'
+DiffDetailsHandler = require './diff-details-handler'
 
 module.exports =
 class GitDiffView
@@ -9,6 +9,8 @@ class GitDiffView
     {@editor, @gutter} = @editorView
     @decorations = {}
     @markers = null
+
+    @diffDetailsHandler = new DiffDetailsHandler(@editorView)
 
     @subscribe @editorView, 'editor:path-changed', @subscribeToBuffer
     @subscribe atom.project.getRepo(), 'statuses-changed', =>
@@ -78,7 +80,7 @@ class GitDiffView
   unsubscribeFromBuffer: ->
     if @buffer?
       @removeDecorations()
-      @buffer.off 'contents-modified', @updateDiffs
+      @buffer.off 'contents-modified', @notifyContentsModified
       @buffer = null
 
   subscribeToBuffer: =>
@@ -86,19 +88,20 @@ class GitDiffView
 
     if @buffer = @editor.getBuffer()
       @scheduleUpdate()
-      @buffer.on 'contents-modified', @updateDiffs
+      @buffer.on 'contents-modified', @notifyContentsModified
 
   cancelUpdate: ->
     clearImmediate(@immediateId)
 
   scheduleUpdate: ->
     @cancelUpdate()
-    @immediateId = setImmediate(@updateDiffs)
+    @immediateId = setImmediate(@notifyContentsModified)
+
+  notifyContentsModified: =>
+    @updateDiffs()
+    @diffDetailsHandler.notifyContentsModified(@diffs)
 
   updateDiffs: =>
-    @diffDetails.remove() if @diffDetails
-    @diffDetails = new DiffDetails(@editorView)
-
     return if @editor.isDestroyed()
 
     @removeDecorations()
@@ -106,11 +109,11 @@ class GitDiffView
       if @diffs = atom.project.getRepo()?.getLineDiffs(path, @buffer.getText())
         @addDecorations(@diffs)
 
+
     # details = atom.project.getRepo()?.getLineDiffDetails(path, @buffer.getText())
     # if details
     #   for detail in details
     #     console.log detail
-
 
   addDecorations: (diffs) ->
     for {oldStart, newStart, oldLines, newLines} in diffs
