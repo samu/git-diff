@@ -6,7 +6,7 @@ module.exports = class DiffDetailsHandler
 
   constructor: (@editorView) ->
     {@editor} = @editorView
-    @showDiffDetails = false
+    @showDiffDetails = true
     @subscribeToCommand @editorView, 'git-diff:toggle-diff-details', =>
       @toggleShowDiffDetails()
 
@@ -61,7 +61,8 @@ module.exports = class DiffDetailsHandler
   updateDiffDetails: ->
 
   notifyContentsModified: (diffs) ->
-    console.log diff for diff in diffs
+    console.log "CONTENTS MODIFIED"
+    console.log "#{diff.newStart} : #{diff.newLines}" for diff in diffs
     @diffs = diffs
     # @diffDetails.remove() if @diffDetails?
     # @diffDetails = null
