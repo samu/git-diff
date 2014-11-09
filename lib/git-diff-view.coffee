@@ -99,7 +99,7 @@ class GitDiffView
 
   notifyContentsModified: =>
     @updateDiffs()
-    @diffDetailsHandler.notifyContentsModified(@diffs)
+    @diffDetailsHandler.notifyContentsModified(@diffs, @buffer)
 
   updateDiffs: =>
     return if @editor.isDestroyed()
@@ -108,12 +108,6 @@ class GitDiffView
     if path = @buffer?.getPath()
       if @diffs = atom.project.getRepo()?.getLineDiffs(path, @buffer.getText())
         @addDecorations(@diffs)
-
-
-    # details = atom.project.getRepo()?.getLineDiffDetails(path, @buffer.getText())
-    # if details
-    #   for detail in details
-    #     console.log detail
 
   addDecorations: (diffs) ->
     for {oldStart, newStart, oldLines, newLines} in diffs
