@@ -70,13 +70,29 @@
   }
 }
 
-.diff-details {
+.diff-details-outer {
   width: 100%;
-  color: @text-color;
-  height: 200px;
-  border: 1px solid #888888;
-  background-color: @tool-panel-background-color;
+  border: 1px solid @overlay-border-color;
+}
+
+.diff-details {
+  // width: 90%;
+  // color: @text-color;
+  border-top: 10px solid @tool-panel-background-color;
+  border-bottom: 10px solid @tool-panel-background-color;
+  // background-color: @tool-panel-background-color;
+  padding-top: 10px;
+  padding-bottom: 10px;
   position: absolute;
+}
+
+.diff-details-overlay {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 0, 0, 0.01);
 }
 
 // Allow messaging to be present when 'zen' package is invoked

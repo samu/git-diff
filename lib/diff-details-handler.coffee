@@ -14,6 +14,7 @@ module.exports = class DiffDetailsHandler
 
   subscribeToActiveTextEditor: ->
     @cursorSubscription?.dispose()
+    # TODO is it possible to listen to only horizontal cursor changes?
     @cursorSubscription = @getActiveTextEditor()?.onDidChangeCursorPosition =>
       @updateCurrentRow()
     @updateCurrentRow()
@@ -22,9 +23,11 @@ module.exports = class DiffDetailsHandler
     atom.workspace.getActiveTextEditor()
 
   updateCurrentRow: ->
-    @currentRow = @getActiveTextEditor()?.getCursorBufferPosition()?.row + 1
-    @updateSelectedHunk()
-    @updateDiffDetailsDisplay()
+    newCurrentRow = @getActiveTextEditor()?.getCursorBufferPosition()?.row + 1
+    if newCurrentRow != @currentRow
+      @currentRow = newCurrentRow
+      @updateSelectedHunk()
+      @updateDiffDetailsDisplay()
 
   toggleShowDiffDetails: ->
     @showDiffDetails = !@showDiffDetails
@@ -53,6 +56,7 @@ module.exports = class DiffDetailsHandler
       if details.hunk == "#{start}#{end}" and details.oldLineNo >= 0
         newHunkDetails.push(details.line)
     newHunkDetails
+    # ["    abc () ->\n", "      console.log('bla')\b"]
 
   updateDiffDetailsDisplay: ->
     if @selectedHunk? and @showDiffDetails
@@ -69,15 +73,16 @@ module.exports = class DiffDetailsHandler
     @diffs = diffs
 
     if path = buffer?.getPath()
-      @lineDiffDetails = atom.project.getRepo()?.getLineDiffDetails(path, buffer.getText())
-      for details in @lineDiffDetails
-        newEnd = null
-        if details.newLines == 0
-          newEnd = details.newStart
-        else
-          newEnd = details.newStart+details.newLines-1
+      @lineDiffDetails = atom.project.getRepo()?.getLineDiffDetails?(path, buffer.getText())
+      if @lineDiffDetails?
+        for details in @lineDiffDetails
+          newEnd = null
+          if details.newLines == 0
+            newEnd = details.newStart
+          else
+            newEnd = details.newStart+details.newLines-1
 
-        details.hunk = "#{details.newStart}#{newEnd}"
+          details.hunk = "#{details.newStart}#{newEnd}"
 
     @updateSelectedHunk(diffs)
     @updateDiffDetailsDisplay()

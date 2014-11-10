@@ -3,8 +3,10 @@ Highlights = require 'highlights'
 
 class DiffDetailsView extends View
   @content: ->
-    @div class: "item-views diff-details editor editor-colors", =>
-      @div outlet: "contents"
+    @div class: "diff-details-outer", =>
+      @div class: "diff-details editor", =>
+        @div class: "diff-details-overlay"
+        @div outlet: "contents"
 
   initialize: (@editorView) ->
     {@editor} = @editorView
@@ -30,7 +32,7 @@ class DiffDetailsView extends View
 
     str = str.replace('<pre class="editor editor-colors">', '').replace('</pre>', '')
 
-    @css(height: hunkDetails.length * @editorView.lineHeight + 2)
+    @css(height: hunkDetails.length * @editorView.lineHeight + 42)
 
     @contents.append(str)
 
