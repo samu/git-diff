@@ -11,6 +11,7 @@
   "dependencies": {
     "emissary": "1.x",
     "fs-plus": "2.x",
+    "highlights": "0.14.0",
     "temp": "~0.6.0"
   }
 }

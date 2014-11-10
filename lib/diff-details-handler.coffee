@@ -38,7 +38,7 @@ module.exports = class DiffDetailsHandler
         unless oldLines is 0 and newLines > 0
           if newLines is 0 and oldLines > 0
             if @currentRow == newStart
-              @selectedHunk = {newStart, newStart}
+              @selectedHunk = {newStart, newEnd: newStart}
               break
           else
             if newStart <= @currentRow
@@ -47,24 +47,37 @@ module.exports = class DiffDetailsHandler
                 @selectedHunk = {newStart, newEnd}
                 break
 
-    console.log @selectedHunk
+  getHunkDetails: (start, end) ->
+    newHunkDetails = []
+    for details in @lineDiffDetails
+      if details.hunk == "#{start}#{end}" and details.oldLineNo >= 0
+        newHunkDetails.push(details.line)
+    newHunkDetails
 
   updateDiffDetailsDisplay: ->
     if @selectedHunk? and @showDiffDetails
       @diffDetailsView.remove() if @diffDetailsView?
       @diffDetailsView = new DiffDetailsView(@editorView)
       @diffDetailsView.setPosition(@selectedHunk.newEnd)
+      hunkDetails = @getHunkDetails(@selectedHunk.newStart, @selectedHunk.newEnd)
+      @diffDetailsView.setHunkDetails(hunkDetails)
     else
       @diffDetailsView.remove() if @diffDetailsView?
       @diffDetailsView = null
-
-  updateDiffDetails: ->
 
   notifyContentsModified: (diffs, buffer) ->
     @diffs = diffs
 
     if path = buffer?.getPath()
-      details = atom.project.getRepo()?.getLineDiffDetails(path, buffer.getText())
+      @lineDiffDetails = atom.project.getRepo()?.getLineDiffDetails(path, buffer.getText())
+      for details in @lineDiffDetails
+        newEnd = null
+        if details.newLines == 0
+          newEnd = details.newStart
+        else
+          newEnd = details.newStart+details.newLines-1
+
+        details.hunk = "#{details.newStart}#{newEnd}"
 
     @updateSelectedHunk(diffs)
     @updateDiffDetailsDisplay()
