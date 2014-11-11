@@ -56,7 +56,6 @@ module.exports = class DiffDetailsHandler
       if details.hunk == "#{start}#{end}" and details.oldLineNo >= 0
         newHunkDetails.push(details.line)
     newHunkDetails
-    # ["    abc () ->\n", "      console.log('bla')\b"]
 
   updateDiffDetailsDisplay: ->
     if @selectedHunk? and @showDiffDetails

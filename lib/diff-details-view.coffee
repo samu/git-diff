@@ -32,7 +32,10 @@ class DiffDetailsView extends View
 
     str = str.replace('<pre class="editor editor-colors">', '').replace('</pre>', '')
 
-    @css(height: hunkDetails.length * @editorView.lineHeight + 42)
+    # @css(height: hunkDetails.length * @editorView.lineHeight + 42)
+    @css(height: hunkDetails.length * @editorView.lineHeight + 2)
+
+    # str = "<atom-text-editor></atom-text-editor>"
 
     @contents.append(str)
 
