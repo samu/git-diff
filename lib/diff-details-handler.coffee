@@ -53,7 +53,7 @@ module.exports = class DiffDetailsHandler
     if @selectedHunk? and @showDiffDetails
       @diffDetailsView = new DiffDetailsView(@editorView) unless @diffDetailsView?
       @diffDetailsView.setPosition(@selectedHunk.end)
-      @diffDetailsView.setHunkDetails(@selectedHunk.oldLines)
+      @diffDetailsView.setSelectedHunk(@selectedHunk)
     else
       @diffDetailsView.remove() if @diffDetailsView?
       @diffDetailsView = null
@@ -65,13 +65,16 @@ module.exports = class DiffDetailsHandler
     for {oldStart, newStart, oldLines, newLines, oldLineNo, newLineNo, line} in rawDiffDetails
       unless oldLines is 0 and newLines > 0
         newEnd = null
+        kind = null
         if newLines is 0 and oldLines > 0
           newEnd = newStart
+          kind = "d"
         else
           newEnd = newStart + newLines - 1
+          kind = "m"
 
         if not hunk? or (newStart != hunk.start)
-          hunk = {start: newStart, end: newEnd, oldLines: [], newLines: []}
+          hunk = {start: newStart, end: newEnd, oldLines: [], newLines: [], kind}
           @lineDiffDetails.push(hunk)
 
         if newLineNo >= 0

@@ -72,17 +72,14 @@
 
 .diff-details-outer {
   width: 100%;
-  // border: 2px solid @overlay-border-color;
-  border: 1px dotted gray;
-  border-radius: 2px;
 }
 
 .diff-details {
-  border-top: 0px solid @tool-panel-background-color;
-  border-bottom: 0px solid @tool-panel-background-color;
-  padding-top: 0px;
-  padding-bottom: 0px;
-  position: absolute;
+  border: 1px dotted gray;
+  border-radius: 2px;
+  position: relative;
+  width: 100%;
+  background-color: @tool-panel-background-color;
 }
 
 .diff-details-overlay {
@@ -93,6 +90,10 @@
   height: 100%;
   // background-color: rgba(255, 0, 0, 0.02);
   // background-color: rgba(255, 255, 0, 0.06);
+}
+
+.diff-details-button-panel {
+  margin-top: 2px;
 }
 
 // Allow messaging to be present when 'zen' package is invoked
