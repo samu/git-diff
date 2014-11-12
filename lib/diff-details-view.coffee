@@ -37,6 +37,6 @@ class DiffDetailsView extends View
 
     # str = "<atom-text-editor></atom-text-editor>"
 
-    @contents.append(str)
+    @contents.html(str)
 
 module.exports = DiffDetailsView

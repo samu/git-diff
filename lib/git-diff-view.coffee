@@ -98,12 +98,11 @@ class GitDiffView
     @immediateId = setImmediate(@notifyContentsModified)
 
   notifyContentsModified: =>
+    return if @editor.isDestroyed()
     @updateDiffs()
     @diffDetailsHandler.notifyContentsModified(@diffs, @buffer)
 
   updateDiffs: =>
-    return if @editor.isDestroyed()
-
     @removeDecorations()
     if path = @buffer?.getPath()
       if @diffs = atom.project.getRepo()?.getLineDiffs(path, @buffer.getText())
