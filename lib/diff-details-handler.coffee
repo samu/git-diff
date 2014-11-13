@@ -35,11 +35,15 @@ module.exports = class DiffDetailsHandler
         hunkHasChanged = @updateSelectedHunk()
         @updateDiffDetailsDisplay() if hunkHasChanged
 
-  subscribeToActiveTextEditor: ->
+  initializeSubscriptions: ->
     @cursorSubscription?.dispose()
     @cursorSubscription = @getActiveTextEditor()?.onDidChangeCursorPosition =>
       @updateCurrentRow()
     @updateCurrentRow()
+
+  removeSubscriptions: ->
+    @cursorSubscription?.dispose()
+    @cursorSubscription = null
 
   toggleShowDiffDetails: ->
     @showDiffDetails = !@showDiffDetails
@@ -49,9 +53,9 @@ module.exports = class DiffDetailsHandler
     @updateDiffDetailsDisplay()
 
     if @showDiffDetails and @lineDiffDetails?
-      @subscribeToActiveTextEditor()
+      @initializeSubscriptions()
     else
-      @cursorSubscription?.dispose()
+      @removeSubscriptions()
 
   liesBetween: (hunk, row) ->
     hunk.start <= row <= hunk.end
@@ -76,29 +80,41 @@ module.exports = class DiffDetailsHandler
         console.log "preparing line diff details"
 
         return false unless rawLineDiffDetails.length > 0
+
         @lineDiffDetails = []
         hunk = null
 
         for {oldStart, newStart, oldLines, newLines, oldLineNo, newLineNo, line} in rawLineDiffDetails
           console.log "processing hunk"
           unless oldLines is 0 and newLines > 0
-            newEnd = null
-            kind = null
-            if newLines is 0 and oldLines > 0
-              newEnd = newStart
-              kind = "d"
-            else
-              newEnd = newStart + newLines - 1
-              kind = "m"
-
+            # process modifications and deletions only
             if not hunk? or (newStart != hunk.start)
-              hunk = {start: newStart, end: newEnd, oldLines: [], newLines: [], kind}
+              # create a new hunk entry if the hunk start of the previous line
+              # is different to the current
+
+              newEnd = null
+              kind = null
+              if newLines is 0 and oldLines > 0
+                newEnd = newStart
+                kind = "d"
+              else
+                newEnd = newStart + newLines - 1
+                kind = "m"
+
+              hunk = {
+                start: newStart, end: newEnd,
+                oldLines: [], newLines: [],
+                newString: "", oldString: ""
+                kind
+              }
               @lineDiffDetails.push(hunk)
 
             if newLineNo >= 0
               hunk.newLines.push(line)
+              hunk.newString += line
             else
               hunk.oldLines.push(line)
+              hunk.oldString += line
         return true
     return false
 
@@ -113,4 +129,4 @@ module.exports = class DiffDetailsHandler
       else
         @updateDiffDetailsDisplay()
         @showDiffDetails = false
-        @cursorSubscription?.dispose()
+        @removeSubscriptions()

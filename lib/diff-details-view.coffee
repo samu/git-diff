@@ -30,19 +30,13 @@ class DiffDetailsView extends View
     @css(top: top + @editorView.lineHeight)
 
   setSelectedHunk: (@selectedHunk) ->
-    @str = ""
-    for hunkDetail in @selectedHunk.oldLines
-      @str += "#{hunkDetail}"
-
-    htmlStr = @highlighter.highlightSync
-      fileContents: @str
+    html = @highlighter.highlightSync
+      fileContents: @selectedHunk.oldString
       scopeName: 'source.coffee'
 
-    htmlStr = htmlStr.replace('<pre class="editor editor-colors">', '').replace('</pre>', '')
-
+    html = html.replace('<pre class="editor editor-colors">', '').replace('</pre>', '')
+    @contents.html(html)
     @contents.css(height: @selectedHunk.oldLines.length * @editorView.lineHeight)
-
-    @contents.html(htmlStr)
 
   copy: (e) ->
     console.log "copy"
@@ -51,8 +45,8 @@ class DiffDetailsView extends View
     if buffer = @editor.getBuffer()
       if @selectedHunk.kind is "m"
         buffer.deleteRows(@selectedHunk.start - 1, @selectedHunk.end - 1)
-        buffer.insert([@selectedHunk.start - 1, 0], @str)
+        buffer.insert([@selectedHunk.start - 1, 0], @selectedHunk.oldString)
       else
-        buffer.insert([@selectedHunk.start, 0], @str)
+        buffer.insert([@selectedHunk.start, 0], @selectedHunk.oldString)
 
 module.exports = DiffDetailsView
