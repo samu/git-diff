@@ -6,11 +6,34 @@ module.exports = class DiffDetailsHandler
 
   constructor: (@editorView) ->
     {@editor} = @editorView
-    @showDiffDetails = true
+    @buffer = @editor.getBuffer()
+
+    @showDiffDetails = false
+    @lineDiffDetails = null
+
     @subscribeToCommand @editorView, 'git-diff:toggle-diff-details', =>
       @toggleShowDiffDetails()
 
-    @subscribeToActiveTextEditor()
+  getActiveTextEditor: ->
+    atom.workspace.getActiveTextEditor()
+
+  updateDiffDetailsDisplay: ->
+    if @showDiffDetails and @selectedHunk?
+      @diffDetailsView = new DiffDetailsView(@editorView) unless @diffDetailsView?
+      @diffDetailsView.setPosition(@selectedHunk.end)
+      @diffDetailsView.setSelectedHunk(@selectedHunk)
+    else
+      @diffDetailsView.remove() if @diffDetailsView?
+      @diffDetailsView = null
+
+  updateCurrentRow: ->
+    console.log "update current row"
+    if @showDiffDetails
+      newCurrentRow = @getActiveTextEditor()?.getCursorBufferPosition()?.row + 1
+      if newCurrentRow != @currentRow
+        @currentRow = newCurrentRow
+        hunkHasChanged = @updateSelectedHunk()
+        @updateDiffDetailsDisplay() if hunkHasChanged
 
   subscribeToActiveTextEditor: ->
     @cursorSubscription?.dispose()
@@ -18,19 +41,17 @@ module.exports = class DiffDetailsHandler
       @updateCurrentRow()
     @updateCurrentRow()
 
-  getActiveTextEditor: ->
-    atom.workspace.getActiveTextEditor()
-
-  updateCurrentRow: ->
-    newCurrentRow = @getActiveTextEditor()?.getCursorBufferPosition()?.row + 1
-    if newCurrentRow != @currentRow
-      @currentRow = newCurrentRow
-      hunkHasChanged = @updateSelectedHunk()
-      @updateDiffDetailsDisplay() if hunkHasChanged
-
   toggleShowDiffDetails: ->
     @showDiffDetails = !@showDiffDetails
+
+    @prepareLineDiffDetails() unless @lineDiffDetails
+    @updateSelectedHunk()
     @updateDiffDetailsDisplay()
+
+    if @showDiffDetails and @lineDiffDetails?
+      @subscribeToActiveTextEditor()
+    else
+      @cursorSubscription?.dispose()
 
   liesBetween: (hunk, row) ->
     hunk.start <= row <= hunk.end
@@ -49,46 +70,47 @@ module.exports = class DiffDetailsHandler
 
     return true
 
-  updateDiffDetailsDisplay: ->
-    if @selectedHunk? and @showDiffDetails
-      @diffDetailsView = new DiffDetailsView(@editorView) unless @diffDetailsView?
-      @diffDetailsView.setPosition(@selectedHunk.end)
-      @diffDetailsView.setSelectedHunk(@selectedHunk)
-    else
-      @diffDetailsView.remove() if @diffDetailsView?
-      @diffDetailsView = null
+  prepareLineDiffDetails: ->
+    if path = @buffer?.getPath()
+      if rawLineDiffDetails = atom.project.getRepo()?.getLineDiffDetails(path, @buffer.getText())
+        console.log "preparing line diff details"
 
-  prepareLineDiffDetails: (rawDiffDetails) ->
-    @lineDiffDetails = []
-    hunk = null
+        return false unless rawLineDiffDetails.length > 0
+        @lineDiffDetails = []
+        hunk = null
 
-    for {oldStart, newStart, oldLines, newLines, oldLineNo, newLineNo, line} in rawDiffDetails
-      unless oldLines is 0 and newLines > 0
-        newEnd = null
-        kind = null
-        if newLines is 0 and oldLines > 0
-          newEnd = newStart
-          kind = "d"
-        else
-          newEnd = newStart + newLines - 1
-          kind = "m"
+        for {oldStart, newStart, oldLines, newLines, oldLineNo, newLineNo, line} in rawLineDiffDetails
+          console.log "processing hunk"
+          unless oldLines is 0 and newLines > 0
+            newEnd = null
+            kind = null
+            if newLines is 0 and oldLines > 0
+              newEnd = newStart
+              kind = "d"
+            else
+              newEnd = newStart + newLines - 1
+              kind = "m"
 
-        if not hunk? or (newStart != hunk.start)
-          hunk = {start: newStart, end: newEnd, oldLines: [], newLines: [], kind}
-          @lineDiffDetails.push(hunk)
+            if not hunk? or (newStart != hunk.start)
+              hunk = {start: newStart, end: newEnd, oldLines: [], newLines: [], kind}
+              @lineDiffDetails.push(hunk)
 
-        if newLineNo >= 0
-          hunk.newLines.push(line)
-        else
-          hunk.oldLines.push(line)
+            if newLineNo >= 0
+              hunk.newLines.push(line)
+            else
+              hunk.oldLines.push(line)
+        return true
+    return false
 
-  notifyContentsModified: (diffs, buffer) ->
+  notifyContentsModified: ->
+    @lineDiffDetails = null
     @selectedHunk = null
-
-    if path = buffer?.getPath()
-      lineDiffDetails = atom.project.getRepo()?.getLineDiffDetails?(path, buffer.getText())
-      if lineDiffDetails?
-        @prepareLineDiffDetails(lineDiffDetails)
-
-    @updateSelectedHunk()
-    @updateDiffDetailsDisplay()
+    if @showDiffDetails
+      hasDiffs = @prepareLineDiffDetails()
+      if hasDiffs
+        @updateSelectedHunk()
+        @updateDiffDetailsDisplay()
+      else
+        @updateDiffDetailsDisplay()
+        @showDiffDetails = false
+        @cursorSubscription?.dispose()

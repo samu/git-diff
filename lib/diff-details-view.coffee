@@ -3,13 +3,12 @@ Highlights = require 'highlights'
 
 class DiffDetailsView extends View
   @content: ->
-    @div class: "diff-details-outer", outlet: "container", =>
-      @div class: "diff-details", outlet: "mainPanel", =>
-        @div class: "diff-details-overlay"
-        @div outlet: "contents"
-      @div outlet: "buttonPanel", class: "diff-details-button-panel", =>
-        @button click: "doCopy", class: 'btn btn-primary inline-block-tight', 'Copy'
-        @button click: "doUndo", class: 'btn btn-error inline-block-tight', 'Undo'
+    @div class: "diff-details-outer", =>
+      @div class: "diff-details-main-panel", outlet: "mainPanel", =>
+        @div class: "diff-details-main-panel-contents", outlet: "contents"
+      @div class: "diff-details-button-panel", outlet: "buttonPanel", =>
+        @button class: 'btn btn-primary inline-block-tight', click: "copy", 'Copy'
+        @button class: 'btn btn-error inline-block-tight', click: "undo", 'Undo'
 
   initialize: (@editorView) ->
     {@editor} = @editorView
@@ -31,10 +30,8 @@ class DiffDetailsView extends View
     @css(top: top + @editorView.lineHeight)
 
   setSelectedHunk: (@selectedHunk) ->
-
     @str = ""
     for hunkDetail in @selectedHunk.oldLines
-      # TODO \n needs to be replaced with &nbsp; if its an empty line
       @str += "#{hunkDetail}"
 
     htmlStr = @highlighter.highlightSync
@@ -47,10 +44,10 @@ class DiffDetailsView extends View
 
     @contents.html(htmlStr)
 
-  doCopy: (e) ->
+  copy: (e) ->
     console.log "copy"
 
-  doUndo: (e) ->
+  undo: (e) ->
     if buffer = @editor.getBuffer()
       if @selectedHunk.kind is "m"
         buffer.deleteRows(@selectedHunk.start - 1, @selectedHunk.end - 1)

@@ -100,7 +100,7 @@ class GitDiffView
   notifyContentsModified: =>
     return if @editor.isDestroyed()
     @updateDiffs()
-    @diffDetailsHandler.notifyContentsModified(@diffs, @buffer)
+    @diffDetailsHandler.notifyContentsModified()
 
   updateDiffs: =>
     @removeDecorations()
