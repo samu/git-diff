@@ -1,5 +1,5 @@
 {Subscriber} = require 'emissary'
-DiffDetailsHandler = require './diff-details-handler'
+DiffDetailsView = require './diff-details-view'
 
 module.exports =
 class GitDiffView
@@ -10,7 +10,7 @@ class GitDiffView
     @decorations = {}
     @markers = null
 
-    @diffDetailsHandler = new DiffDetailsHandler(@editorView)
+    @diffDetailsView = new DiffDetailsView(@editorView)
 
     @subscribe @editorView, 'editor:path-changed', @subscribeToBuffer
     @subscribe atom.project.getRepo(), 'statuses-changed', =>
@@ -100,7 +100,7 @@ class GitDiffView
   notifyContentsModified: =>
     return if @editor.isDestroyed()
     @updateDiffs()
-    @diffDetailsHandler.notifyContentsModified()
+    @diffDetailsView.notifyContentsModified()
 
   updateDiffs: =>
     @removeDecorations()
